@@ -22,18 +22,46 @@ Deno.serve(async (req) => {
     const adm = createClient(url, service, { auth: { persistSession: false } });
     const corpo = await req.json();
 
+    const limparTel = (t: unknown) => String(t || "").replace(/\D/g, "") || null;
+
     if (corpo.acao === "criar") {
       const email = String(corpo.email || "").trim().toLowerCase();
       const senha = String(corpo.senha || "");
+      const telefone = limparTel(corpo.telefone);
       if (!email || senha.length < 6) return json({ erro: "Informe e-mail e senha com pelo menos 6 caracteres." }, 400);
+      if (telefone) {
+        const { data: ja } = await adm.from("perfis").select("id").eq("telefone", telefone).maybeSingle();
+        if (ja) return json({ erro: "Já existe um usuário com esse telefone." }, 400);
+      }
       const { data, error } = await adm.auth.admin.createUser({
         email, password: senha, email_confirm: true,
         app_metadata: { criado_pelo_admin: true },
-        user_metadata: { nome: corpo.nome || email.split("@")[0] },
+        user_metadata: { nome: corpo.nome || email.split("@")[0], telefone },
       });
-      if (error) return json({ erro: error.message }, 400);
-      await adm.from("perfis").update({ aprovado: true }).eq("id", data.user.id);
+      if (error) return json({ erro: error.message.includes("already") ? "Já existe um usuário com esse e-mail." : error.message }, 400);
+      await adm.from("perfis").update({ aprovado: true, telefone }).eq("id", data.user.id);
       return json({ ok: true, id: data.user.id });
+    }
+
+    if (corpo.acao === "editar") {
+      const telefone = limparTel(corpo.telefone);
+      const email = String(corpo.email || "").trim().toLowerCase();
+      if (email) {
+        const { error } = await adm.auth.admin.updateUserById(corpo.id, { email, email_confirm: true });
+        if (error) return json({ erro: error.message }, 400);
+      }
+      const { error } = await adm.from("perfis").update({ nome: corpo.nome, telefone, ...(email ? { email } : {}) }).eq("id", corpo.id);
+      if (error) return json({ erro: error.message.includes("perfis_telefone") ? "Telefone já usado por outro usuário." : error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (corpo.acao === "link_senha") {
+      const { data: p } = await adm.from("perfis").select("email").eq("id", corpo.id).maybeSingle();
+      if (!p?.email || p.email.endsWith(".local")) return json({ erro: "Este usuário não tem um e-mail real cadastrado." }, 400);
+      const publico = createClient(url, anon, { auth: { persistSession: false } });
+      const { error } = await publico.auth.resetPasswordForEmail(p.email, { redirectTo: corpo.site || undefined });
+      if (error) return json({ erro: error.message }, 400);
+      return json({ ok: true });
     }
 
     if (corpo.acao === "senha") {

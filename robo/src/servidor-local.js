@@ -34,9 +34,9 @@ function iniciarServidor({ obterEstado, entrar, sair }) {
       const erro = new URL(req.url, 'http://x').searchParams.get('erro');
       let html;
       if (!est.logado) {
-        html = `<h1>🤖 Robô de Atendimento</h1><p>Primeiro acesso neste computador: entre com o <b>e-mail e senha do ADMINISTRADOR</b> (os mesmos do painel online).</p>
+        html = `<h1>🤖 Robô de Atendimento</h1><p>Primeiro acesso neste computador: entre com o <b>usuário e senha do ADMINISTRADOR</b> (os mesmos do painel online).</p>
         ${erro ? `<div class="erro">${esc(erro)}</div>` : ''}
-        <form method="post" action="/entrar"><label>E-mail</label><input name="email" type="email" required>
+        <form method="post" action="/entrar"><label>Usuário</label><input name="email" type="text" required autocapitalize="none">
         <label>Senha</label><input name="senha" type="password" required><button>Entrar e ligar o robô</button></form>`;
       } else {
         html = `<h1>🤖 Robô de Atendimento</h1><p class="ok">● Robô LIGADO neste computador</p>

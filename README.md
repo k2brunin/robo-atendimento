@@ -12,18 +12,19 @@ Sistema próprio de atendimento automático (estilo Octadesk/Manychat) para tria
 
 ---
 
-## 1. Primeiro acesso (uma única vez)
+## 1. Acesso ao painel
 
-1. Abra o painel: **https://robo-atendimento-eosin.vercel.app**
-2. Clique em **"Primeiro acesso"**, preencha nome, e-mail e senha → **essa conta vira o ADMINISTRADOR**.
-3. Abra seu e-mail e clique no link de confirmação. Volte ao painel e entre.
+Abra **https://robo-atendimento-eosin.vercel.app** e entre com **usuário, e-mail ou telefone** + senha.
+- **Administrador:** usuário `Admin` (a senha foi combinada na montagem — troque-a em Administração → 🔑 assim que terminar os testes).
+- **Usuários:** são criados pelo administrador em **Administração → Criar novo usuário** (nome, e-mail, telefone e senha). Eles entram com o e-mail **ou** o telefone.
+- Esqueceu a senha? O administrador usa 🔑 (define uma nova na hora) ou ✉️ (envia um link para o e-mail do usuário).
 
 ## 2. Instalar o robô no PC que fica ligado
 
 1. Baixe o instalador em **https://github.com/k2brunin/robo-atendimento/releases/latest** → arquivo `Instalador-Robo-Atendimento.exe`.
 2. Dê dois cliques. Se aparecer **"O Windows protegeu o computador"**: clique em **Mais informações → Executar assim mesmo**.
 3. Avançar → Instalar → Concluir. Uma página abre no navegador (`http://localhost:3333`).
-4. Entre com o **e-mail e senha do ADMINISTRADOR**. Pronto: o robô fica ligado e abre sozinho sempre que o Windows iniciar.
+4. Entre com o **usuário e senha do ADMINISTRADOR** (`Admin`). Pronto: o robô fica ligado e abre sozinho sempre que o Windows iniciar.
 
 Atalhos criados na área de trabalho:
 - **Robo de Atendimento** → liga o robô (se estiver desligado) e mostra a página de status.
@@ -49,7 +50,7 @@ Painel → **Funis** → **Criar funis de exemplo** (já vem com os textos do pa
 - **Administração** (só ADM): criar usuários (cada um com seu WhatsApp), ativar IA.
 
 ## 6. Novo usuário (ex.: seu colega)
-Administração → **Criar novo usuário** → envie e-mail/senha para ele. Ele entra no mesmo site, conecta o WhatsApp dele pela página WhatsApp e cria os funis dele. O robô dele roda no **seu** PC automaticamente — nada para instalar no PC dele.
+Administração → **Criar novo usuário** (nome, e-mail, telefone, senha) → envie os dados para ele. Ele entra no mesmo site, conecta o WhatsApp dele pela página WhatsApp e cria os funis dele. O robô dele roda no **seu** PC automaticamente — nada para instalar no PC dele.
 
 ## 7. IA (opcional, grátis)
 1. Crie uma chave em **https://aistudio.google.com** → *Get API key*.

@@ -4,7 +4,7 @@ const { sb } = require('./banco');
 const { log } = require('./dados');
 const { Gerenciador } = require('./gerenciador');
 const { iniciarServidor } = require('./servidor-local');
-const { PORTA_LOCAL } = require('./ambiente');
+const { PORTA_LOCAL, SUPABASE_URL, SUPABASE_CHAVE_PUBLICA } = require('./ambiente');
 
 const gerenciador = new Gerenciador();
 
@@ -26,8 +26,17 @@ async function principal() {
         return { logado: !!u, email: u && u.email, contas: gerenciador.resumo(), erro: gerenciador.ultimoErro };
       },
       entrar: async (email, senha) => {
-        const { data, error } = await sb.auth.signInWithPassword({ email: email.trim(), password: senha });
-        if (error) return 'E-mail ou senha incorretos (ou e-mail ainda não confirmado).';
+        let tokens;
+        try {
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/entrar`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_CHAVE_PUBLICA },
+            body: JSON.stringify({ login: email.trim(), senha }),
+          });
+          tokens = await r.json();
+          if (!r.ok || !tokens.access_token) return tokens.erro || 'Usuário ou senha incorretos.';
+        } catch (e) { return 'Sem conexão com a internet: ' + e.message; }
+        const { data, error } = await sb.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
+        if (error) return error.message;
         if (!(await ehAdmin(data.user.id))) { await sb.auth.signOut(); return 'Somente o ADMINISTRADOR pode ligar o robô neste computador.'; }
         log('Login feito:', email);
         gerenciador.iniciar();

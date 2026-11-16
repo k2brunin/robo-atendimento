@@ -143,7 +143,7 @@ export default function App() {
           </button>
         ))}
         <div className="rodape">
-          <span>{perfil.email}</span>
+          <span>{perfil.usuario || perfil.email}</span>
           <button className="btn pequeno" onClick={() => sb.auth.signOut()}><LogOut size={14} /> Sair</button>
         </div>
       </nav>

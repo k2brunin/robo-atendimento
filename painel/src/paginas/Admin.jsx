@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UserPlus, Trash2, KeyRound, Eye } from 'lucide-react';
+import { UserPlus, Trash2, KeyRound, Eye, Mail, Pencil } from 'lucide-react';
 import { sb } from '../supabase';
 import { Interruptor } from '../componentes.jsx';
 
@@ -7,7 +7,7 @@ export default function Admin({ perfil, recarregarContas, trocarConta }) {
   const [perfis, setPerfis] = useState([]);
   const [contas, setContas] = useState([]);
   const [segredos, setSegredos] = useState({});
-  const [novo, setNovo] = useState({ nome: '', email: '', senha: '' });
+  const [novo, setNovo] = useState({ nome: '', email: '', telefone: '', senha: '' });
   const [msg, setMsg] = useState('');
 
   async function carregar() {
@@ -33,13 +33,25 @@ export default function Admin({ perfil, recarregarContas, trocarConta }) {
 
   async function criar(e) {
     e.preventDefault(); setMsg('');
-    try { await chamar({ acao: 'criar', ...novo }); setMsg('Usuário criado ✅ Envie o e-mail e a senha para ele entrar.'); setNovo({ nome: '', email: '', senha: '' }); carregar(); recarregarContas(); }
+    try { await chamar({ acao: 'criar', ...novo }); setMsg('Usuário criado ✅ Ele entra no site com o e-mail OU o telefone + a senha.'); setNovo({ nome: '', email: '', telefone: '', senha: '' }); carregar(); recarregarContas(); }
     catch (er) { setMsg('Erro: ' + er.message); }
   }
   async function trocarSenha(p) {
     const s = window.prompt(`Nova senha para ${p.email} (mínimo 6 caracteres):`);
     if (!s) return;
     try { await chamar({ acao: 'senha', id: p.id, senha: s }); alert('Senha alterada.'); } catch (er) { alert('Erro: ' + er.message); }
+  }
+  async function enviarLink(p) {
+    if (!window.confirm(`Enviar um link de redefinição de senha para ${p.email}?`)) return;
+    try { await chamar({ acao: 'link_senha', id: p.id, site: window.location.origin }); alert('Link enviado para ' + p.email + '. Peça para ele olhar também a caixa de spam.'); }
+    catch (er) { alert('Erro: ' + er.message); }
+  }
+  async function editar(p) {
+    const nome = window.prompt('Nome:', p.nome || ''); if (nome === null) return;
+    const email = window.prompt('E-mail:', p.email || ''); if (email === null) return;
+    const telefone = window.prompt('Telefone (com DDD):', p.telefone || ''); if (telefone === null) return;
+    try { await chamar({ acao: 'editar', id: p.id, nome, email: email !== p.email ? email : '', telefone }); carregar(); }
+    catch (er) { alert('Erro: ' + er.message); }
   }
   async function excluir(p) {
     if (!window.confirm(`Excluir ${p.email}? Todas as conversas, funis e o WhatsApp desta conta serão apagados.`)) return;
@@ -64,7 +76,8 @@ export default function Admin({ perfil, recarregarContas, trocarConta }) {
                 const c = contas.find((x) => x.id === p.conta_id) || {};
                 return (
                   <tr key={p.id}>
-                    <td><b>{p.nome}</b>{p.papel === 'admin' && <span className="selo robo" style={{ marginLeft: 6 }}>ADM</span>}<div className="ajuda">{p.email}</div></td>
+                    <td><b>{p.nome}</b>{p.papel === 'admin' && <span className="selo robo" style={{ marginLeft: 6 }}>ADM</span>}
+                      <div className="ajuda">{p.usuario ? `usuário: ${p.usuario}` : p.email}</div>{p.telefone && <div className="ajuda">📱 {p.telefone}</div>}</td>
                     <td>{p.papel === 'admin' ? '—' : <Interruptor valor={p.aprovado} onChange={(v) => aprovar(p, v)} />}</td>
                     <td><span className={'selo ' + (c.whatsapp_status === 'conectado' ? 'ok' : '')}>{c.whatsapp_status || '—'}</span><div className="ajuda">{c.whatsapp_numero}</div></td>
                     <td>
@@ -77,7 +90,9 @@ export default function Admin({ perfil, recarregarContas, trocarConta }) {
                       <button className="btn pequeno" onClick={() => salvarChave(c.id)}>Salvar</button></div></td>
                     <td><div className="linha" style={{ flexWrap: 'nowrap' }}>
                       <button className="btn icone pequeno" title="Ver esta conta" onClick={() => trocarConta(c.id)}><Eye size={14} /></button>
-                      <button className="btn icone pequeno" title="Trocar senha" onClick={() => trocarSenha(p)}><KeyRound size={14} /></button>
+                      {p.papel !== 'admin' && <button className="btn icone pequeno" title="Editar nome, e-mail e telefone" onClick={() => editar(p)}><Pencil size={14} /></button>}
+                      <button className="btn icone pequeno" title="Definir nova senha agora" onClick={() => trocarSenha(p)}><KeyRound size={14} /></button>
+                      {p.papel !== 'admin' && <button className="btn icone pequeno" title="Enviar link de nova senha para o e-mail" onClick={() => enviarLink(p)}><Mail size={14} /></button>}
                       {p.id !== perfil.id && <button className="btn icone pequeno perigo" title="Excluir" onClick={() => excluir(p)}><Trash2 size={14} /></button>}
                     </div></td>
                   </tr>
@@ -85,6 +100,7 @@ export default function Admin({ perfil, recarregarContas, trocarConta }) {
               })}
             </tbody>
           </table>
+          <p className="ajuda">🔑 = definir nova senha na hora · ✉️ = enviar link de nova senha para o e-mail do usuário · ✏️ = editar dados. Cada usuário só vê o WhatsApp, os funis e as conversas dele.</p>
           <p className="ajuda">IA: pegue uma chave grátis em aistudio.google.com → "Get API key". "Só sugerir" mostra uma resposta pronta para você aprovar; "Responder sozinha" responde dúvidas que o robô não entendeu, usando as informações da página Configurações.</p>
         </div>
 
@@ -93,9 +109,10 @@ export default function Admin({ perfil, recarregarContas, trocarConta }) {
           {msg && <div className={msg.startsWith('Erro') ? 'erro-caixa' : 'ok-caixa'}>{msg}</div>}
           <label className="rotulo">Nome</label><input type="text" value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} required />
           <label className="rotulo">E-mail</label><input type="email" value={novo.email} onChange={(e) => setNovo({ ...novo, email: e.target.value })} required />
+          <label className="rotulo">Telefone (com DDD) — também serve para entrar</label><input type="text" placeholder="(53) 99999-0000" value={novo.telefone} onChange={(e) => setNovo({ ...novo, telefone: e.target.value })} />
           <label className="rotulo">Senha inicial</label><input type="text" value={novo.senha} onChange={(e) => setNovo({ ...novo, senha: e.target.value })} required minLength={6} />
           <button className="btn primario" style={{ marginTop: 14 }}><UserPlus size={16} /> Criar usuário</button>
-          <p className="ajuda">O usuário entra no mesmo site com esse e-mail e senha, conecta o WhatsApp dele pela página "WhatsApp" e monta os próprios funis. O robô dele roda no seu PC.</p>
+          <p className="ajuda">O usuário entra no mesmo site com o e-mail OU o telefone + senha, conecta o WhatsApp dele pela página "WhatsApp" e monta os próprios funis. O robô dele roda no seu PC.</p>
         </form>
       </div>
     </div>
