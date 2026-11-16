@@ -11,7 +11,7 @@ export default function Login() {
   const [aviso, setAviso] = useState('');
   const [carregando, setCarregando] = useState(false);
 
-  useEffect(() => { sb.rpc('existe_admin').then(({ data }) => setExisteAdmin(data !== false)); }, []);
+  useEffect(() => { sb.rpc('existe_admin').then(({ data }) => setExisteAdmin(data === true)); }, []);
 
   async function enviar(e) {
     e.preventDefault();
