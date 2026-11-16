@@ -127,4 +127,4 @@ function funisExemplo() {
   ];
 }
 
-module.exports = { CONFIG_PADRAO, funisExemplo };
+export { CONFIG_PADRAO, funisExemplo };

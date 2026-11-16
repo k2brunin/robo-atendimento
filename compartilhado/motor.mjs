@@ -1,8 +1,8 @@
 // MOTOR DE REGRAS: decide o que o robô responde. Não fala com o WhatsApp diretamente,
 // só recebe o estado do contato + o que o cliente escreveu e devolve as ações.
 
-const { normalizar, tokens, pontuar, intencao, primeiroNome, preencher, sortear } = require('./texto');
-const { CONFIG_PADRAO } = require('./padroes');
+import { normalizar, tokens, pontuar, intencao, primeiroNome, preencher, sortear } from './texto.mjs';
+import { CONFIG_PADRAO } from './padroes.mjs';
 
 function mesclarConfig(cfg) {
   const c = { ...CONFIG_PADRAO, ...(cfg || {}) };
@@ -210,4 +210,4 @@ function processar({ contato, entrada, funis, config, agora = new Date() }) {
   return res; // quente / humano: robô fica quieto
 }
 
-module.exports = { processar, mesclarConfig, dentroDoHorario, extrairCep, escolherFunil, dataHoje };
+export { processar, mesclarConfig, dentroDoHorario, extrairCep, escolherFunil, dataHoje };

@@ -1,0 +1,17 @@
+{
+  "name": "robo-atendimento",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Robô de atendimento para WhatsApp - funil de triagem de leads",
+  "main": "iniciar.js",
+  "scripts": {
+    "start": "node iniciar.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "^1.34.7"
+  }
+}

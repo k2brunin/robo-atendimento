@@ -112,4 +112,4 @@ function sortear(lista) {
   return validas[Math.floor(Math.random() * validas.length)];
 }
 
-module.exports = { normalizar, tokens, levenshtein, palavraParecida, contemFrase, pontuar, intencao, primeiroNome, preencher, sortear };
+export { normalizar, tokens, levenshtein, palavraParecida, contemFrase, pontuar, intencao, primeiroNome, preencher, sortear };

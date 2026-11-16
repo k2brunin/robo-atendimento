@@ -1,9 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { processar } = require('../src/motor');
-const { funisExemplo } = require('../src/padroes');
-const { intencao, pontuar } = require('../src/texto');
-const { CONFIG_PADRAO } = require('../src/padroes');
+const { processar } = require('../../compartilhado/motor.mjs');
+const { funisExemplo } = require('../../compartilhado/padroes.mjs');
+const { intencao, pontuar } = require('../../compartilhado/texto.mjs');
+const { CONFIG_PADRAO } = require('../../compartilhado/padroes.mjs');
 
 const funis = funisExemplo().map((f, i) => ({ ...f, id: 'f' + i }));
 // preenche caminhos fictícios das mídias
