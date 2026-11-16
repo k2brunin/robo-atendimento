@@ -14,7 +14,7 @@ Sistema próprio de atendimento automático (estilo Octadesk/Manychat) para tria
 
 ## 1. Primeiro acesso (uma única vez)
 
-1. Abra o endereço do painel (link da Vercel).
+1. Abra o painel: **https://robo-atendimento-eosin.vercel.app**
 2. Clique em **"Primeiro acesso"**, preencha nome, e-mail e senha → **essa conta vira o ADMINISTRADOR**.
 3. Abra seu e-mail e clique no link de confirmação. Volte ao painel e entre.
 
