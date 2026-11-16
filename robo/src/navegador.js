@@ -2,6 +2,10 @@
 const fs = require('fs');
 const path = require('path');
 
+// No instalador do Windows o Chrome vem junto, na pasta "chrome" ao lado do robô.
+const pastaChrome = path.join(__dirname, '..', '..', 'chrome');
+if (!process.env.PUPPETEER_CACHE_DIR && fs.existsSync(pastaChrome)) process.env.PUPPETEER_CACHE_DIR = pastaChrome;
+
 function acharNavegador() {
   if (process.env.ROBO_CHROME && fs.existsSync(process.env.ROBO_CHROME)) return process.env.ROBO_CHROME;
   try {

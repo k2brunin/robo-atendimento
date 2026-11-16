@@ -69,6 +69,7 @@ class Sessao {
         executablePath: acharNavegador(),
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-first-run'],
       },
+      webVersionCache: { type: 'local', path: path.join(pastas.base, 'cache-whatsapp-web') },
       qrMaxRetries: 8,
       takeoverOnConflict: true,
       takeoverTimeoutMs: 10000,
@@ -237,6 +238,7 @@ class Sessao {
 
   async rodarFunil(chatId, b) {
     if (!this.conta.robo_ativo || !this.pronto) return;
+    if (this.pausadoAgora && this.pausadoAgora.has(chatId)) return; // você acabou de responder
     const { data: contato } = await sb.from('contatos').select('*').eq('conta_id', this.id).eq('wa_id', chatId).single();
     if (!contato) return;
     const cfg = this.config;
@@ -396,6 +398,15 @@ class Sessao {
     if (!msg.fromMe) return;
     const chatId = msg.to;
     if (chatIgnorado(chatId)) return;
+    // Se o robô não está enviando nada para esse cliente, a mensagem com certeza é sua:
+    // cancela na hora a resposta automática que estava esperando.
+    if (!this.enviandoBot.has(chatId) && !this.processando.has(chatId)) {
+      const b0 = this.buffers.get(chatId);
+      if (b0) { clearTimeout(b0.timer); this.buffers.delete(chatId); }
+      this.pausadoAgora = this.pausadoAgora || new Set();
+      this.pausadoAgora.add(chatId);
+      setTimeout(() => this.pausadoAgora.delete(chatId), 5000);
+    }
     await esperar(1200); // dá tempo do robô registrar o id da própria mensagem
     const id = msg.id._serialized;
     if (this.idsBot.has(id) || this.enviandoBot.has(chatId)) return;

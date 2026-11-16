@@ -1,0 +1,77 @@
+name: Gerar instalador do robô (Windows)
+
+on:
+  push:
+    branches: [main]
+    paths: ['robo/**', 'compartilhado/**', 'instalador/**', '.github/workflows/instalador.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Testes do robô
+        working-directory: robo
+        env: { PUPPETEER_SKIP_DOWNLOAD: '1' }
+        run: npm ci && npm test
+
+  instalador:
+    needs: testes
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+
+      - name: Montar pacote
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pacote/robo, pacote/node, pacote/chrome | Out-Null
+          Copy-Item -Recurse robo/src pacote/robo/src
+          Copy-Item robo/iniciar.js, robo/package.json, robo/package-lock.json pacote/robo/
+          Copy-Item -Recurse compartilhado pacote/compartilhado
+          Copy-Item instalador/*.vbs, instalador/*.bat pacote/
+          Copy-Item (Get-Command node).Source pacote/node/robo-atendimento.exe
+
+      - name: Instalar dependências + Chrome
+        shell: pwsh
+        working-directory: pacote/robo
+        env:
+          PUPPETEER_CACHE_DIR: ${{ github.workspace }}\pacote\chrome
+        run: |
+          npm ci --omit=dev
+          if (-not (Get-ChildItem -Recurse -Filter chrome.exe ../chrome)) { throw "Chrome não foi baixado" }
+
+      - name: Teste rápido (o robô carrega no Windows)
+        shell: pwsh
+        working-directory: pacote/robo
+        run: ..\node\robo-atendimento.exe -e "require('./src/sessao'); const {acharNavegador}=require('./src/navegador'); const p=acharNavegador(); console.log('Chrome:', p); if(!p) process.exit(1)"
+
+      - name: Gerar instalador (Inno Setup)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) { choco install innosetup --no-progress -y }
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DVersao=1.0.${{ github.run_number }} instalador/robo.iss
+          if ($LASTEXITCODE -ne 0) { throw "Falha no Inno Setup" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Instalador-Robo-Atendimento
+          path: saida/Instalador-Robo-Atendimento.exe
+
+      - name: Publicar versão para download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: robo-v1.0.${{ github.run_number }}
+          name: Robô de Atendimento 1.0.${{ github.run_number }}
+          make_latest: true
+          files: saida/Instalador-Robo-Atendimento.exe
+          body: |
+            Baixe o arquivo **Instalador-Robo-Atendimento.exe** abaixo e execute no PC que fica ligado.
+            Se o Windows mostrar "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo".
